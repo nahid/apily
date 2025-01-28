@@ -1,3 +1,4 @@
 .apily
 composer.lock
 vendor
+.idea
