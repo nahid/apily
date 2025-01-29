@@ -77,14 +77,13 @@ class Json {
             // Keys (e.g., "name":)
             '/"(.*?)":/' => '<fg=green>"$1":</>', // Green for keys
             // Strings (e.g., "John Doe")
-            '/:"(.*?)"/' => ' <fg=white>"$1"</>', // White for string values
-            '/: "(.*?)"/' => ' <fg=white>"$1"</>', // White for string values
+            '/:"(.*?)"/' => '<fg=white>"$1"</>', // White for string values
             // Numbers (e.g., 30)
-            '/\b(\d+)\b/' => ' <fg=bright-magenta>$1</>', // White for numeric values
+            '/\b(-?[0-9]*\.?[0-9]+)\b/' => '<fg=bright-magenta>$1</>', // White for numeric values
             // Booleans (e.g., true, false)
-            '/\b(true|false)\b/' => ' <fg=bright-magenta>$1</>', // White for boolean values
+            '/\b(true|false)\b/' => '<fg=bright-magenta>$1</>', // White for boolean values
             // Null values
-            '/\b(null)\b/' => ' <fg=white>$1</>', // White for null values
+            '/\b(null)\b/' => '<fg=white>$1</>', // White for null values
             // Brackets and braces
             '/(\{|\}|\[|\])/' => '<fg=yellow>$1</>', // Yellow for brackets
         ];

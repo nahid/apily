@@ -4,6 +4,7 @@ namespace Nahid\Apily;
 
 use GuzzleHttp\Psr7\MultipartStream;
 use GuzzleHttp\Psr7\Request;
+use GuzzleHttp\Psr7\Uri;
 use Nahid\Apily\Utilities\Config;
 use Nahid\Apily\Utilities\Helper;
 
@@ -22,8 +23,8 @@ class Api
         $filePath = getcwd().'/.apily/'.$path.'.api';
 
 
-        if (!file_exists($file = $filePath)) {
-            throw new \Exception("File not found: $file");
+        if (!file_exists($filePath)) {
+            throw new \Exception("File not found: $filePath");
         }
 
         $json = file_get_contents($filePath);
@@ -35,24 +36,30 @@ class Api
 
     public function request(): Request
     {
-        match ($this->get('http.type', 'empty')) {
-            'json' => $body = $this->handleJsonContent(),
-            'multipart' => $body = $this->handleMultipartContent(),
-            'binary' => $body = $this->handleBinaryContent(),
-            'x-www-form-urlencoded' => $body = $this->handleXWwwFormUrlencodedContent(),
-            'form-data' => $body = $this->handleFormDataContent(),
-            'text' => $body = $this->handleTextContent(),
-            'empty' => $body = null,
+        $body = match ($this->get('http.body.type', 'empty')) {
+            'json' => $this->handleJsonContent(),
+            'multipart' => $this->handleMultipartContent(),
+            'binary' => $this->handleBinaryContent(),
+            'x-www-form-urlencoded' => $this->handleXWwwFormUrlencodedContent(),
+            'form-data' => $this->handleFormDataContent(),
+            'text' => $this->handleTextContent(),
+            'empty' => null,
+            default => throw new \Exception('Invalid body type'),
         };
 
         if (in_array($this->getMethod(), ['GET', 'HEAD'])) {
             $body = null;
         }
-        
+
+        $queryParams = array_replace_recursive(Config::getDefault('query', []), $this->get('http.query', []));
+        $url = (new Uri($this->getFullUrl()))->withQuery(http_build_query($queryParams));
+
+        $headers = array_replace_recursive(Config::getDefault('headers', []), $this->getHeaders());
+
         return new Request(
             $this->getMethod(),
-            $this->getFullUrl(),
-            $this->getHeaders(),
+            $url,
+            $headers,
             $body
         );
 
@@ -60,12 +67,12 @@ class Api
 
     private function handleJsonContent(): string
     {
-        return json_encode($this->getBody());
+        return json_encode($this->getBodyData());
     }
 
     private function handleMultipartContent(): MultipartStream
     {
-        $body = $this->getBody();
+        $body = $this->getBodyData();
         $multipartData = [];
 
         foreach ($body as $f) {
@@ -88,30 +95,30 @@ class Api
 
     private function handleBinaryContent(): string
     {
-        $this->setContentType(mime_content_type($this->getBody()));
+        $this->setContentType(mime_content_type($this->getBodyData()));
 
-        return file_get_contents($this->getBody());
+        return file_get_contents($this->getBodyData());
     }
 
     private function handleXWwwFormUrlencodedContent(): string
     {
         $this->setContentType('application/x-www-form-urlencoded');
 
-        return http_build_query($this->getBody());
+        return http_build_query($this->getBodyData());
     }
 
     private function handleFormDataContent(): string
     {
         $this->setContentType('application/x-www-form-urlencoded');
 
-        return http_build_query($this->getBody());
+        return http_build_query($this->getBodyData());
     }
 
     private function handleTextContent(): string
     {
         $this->setContentType('text/plain');
 
-        return $this->getBody();
+        return $this->getBodyData();
     }
 
     public function get(string $key, mixed $default = null): mixed
@@ -149,9 +156,9 @@ class Api
         return $this->get('http.headers', []);
     }
 
-    public function getBody(): mixed
+    public function getBodyData(): mixed
     {
-        return $this->get('http.body');
+        return $this->get('http.body.data');
     }
 
     public function setContentType(string $type): void

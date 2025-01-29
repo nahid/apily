@@ -1,7 +1,26 @@
 #!/usr/bin/env php
 <?php
 
+use Nahid\Apily\Utilities\Config;
+
 require __DIR__.'/../vendor/autoload.php';
+$argsStr = array_filter($argv, function($arg) {
+    return str_contains($arg, '--args') || str_contains($arg, '-a');
+});
+
+$argsValue = array_values($argsStr)[0] ?? '';
+$argsJson = '{}';
+if (str_contains($argsValue, '--args=')) {
+    $argsJson = str_replace('--args=', '', $argsValue);
+}
+if (str_contains($argsValue, '-a=')) {
+    $argsJson = str_replace('-a=', '', $argsValue);
+}
+
+$args = json_decode($argsJson, true);
+Config::init($args);
+
+
 
 $app = new \Symfony\Component\Console\Application('Apily', '1.0.0');
 
