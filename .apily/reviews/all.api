@@ -1,0 +1,7 @@
+{
+  "description": "Get all reviews",
+  "http": {
+    "method": "GET",
+    "path": "/reviews"
+  }
+}

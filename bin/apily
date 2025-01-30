@@ -25,5 +25,9 @@ Config::init($args);
 $app = new \Symfony\Component\Console\Application('Apily', '1.0.0');
 
 $app->add(new \Nahid\Apily\Commands\CallCommand());
+$app->add(new \Nahid\Apily\Commands\InitCommand());
+$app->add(new \Nahid\Apily\Commands\ApiCreateCommand());
+$app->add(new \Nahid\Apily\Commands\ApiListCommand());
+$app->add(new \Nahid\Apily\Commands\TestRunCommand());
 
 $app->run();

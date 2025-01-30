@@ -10,14 +10,29 @@ class Config
     public static function init(array $arguments = []): void
     {
         self::$args = $arguments;
-        if (is_null(self::$config)) {
-            $json = file_get_contents(getcwd().'/apily.conf');
-            self::$config = json_decode($json, true);
+        if (self::loadConfig()) {
+            self::processEnv();
+            self::processDefaults();
+
         }
 
-        self::processEnv();
-        self::processDefaults();
 
+    }
+
+    protected static function loadConfig(): bool
+    {
+        if (is_null(self::$config)) {
+            if (!file_exists(getcwd().'/apily.conf')) {
+                echo "apily.conf file not found. Please run 'apily init' command to create the file.";
+                return false;
+            }
+
+            $json = file_get_contents(getcwd().'/apily.conf');
+            self::$config = json_decode($json, true);
+
+        }
+
+        return true;
     }
 
     public static function get(string $key, mixed $default = null): mixed

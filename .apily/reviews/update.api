@@ -1,0 +1,20 @@
+{
+  "description": "API request for reviews update",
+  "http": {
+    "method": "PUT",
+    "path": "/reviews/{{args.reviewId}}/update",
+    "body": {
+      "type": "json",
+      "data": {
+        "rating": 5,
+        "name": "Gim G",
+        "email": "gim.g@shopex.io",
+        "date": "2021-09-01 00:00:00"
+      }
+    },
+    "headers": {
+      "Content-Type": "application/json",
+      "Accept": "application/json"
+    }
+  }
+}

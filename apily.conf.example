@@ -1,0 +1,19 @@
+{
+    "baseUrl": "https://fakestoreapi.com",
+    "apiEnv": "local",
+    "environments": {
+        "local": {
+            "baseUrl": "https://fakestoreapi.com",
+            "token": ""
+        },
+        "dev": {
+            "baseUrl": "https://fakestoreapi.com"
+        }
+    },
+    "defaults": {
+        "headers": {
+        },
+        "query": {
+        }
+    }
+}

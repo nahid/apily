@@ -1,0 +1,11 @@
+{
+  "description": "{{description}}",
+  "http": {
+    "method": "{{method}}",
+    "path": "{{uri}}",
+    "body": {{body}},
+    "headers": {
+      "Content-Type": "application/json"
+    }
+  }
+}
