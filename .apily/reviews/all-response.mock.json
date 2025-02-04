@@ -1,0 +1,29 @@
+{
+    "status": 200,
+    "headers": {
+        "Content-Type": "application/json"
+    },
+    "body": [
+        {
+            "id": 1,
+            "productId": 1,
+            "rating": 5,
+            "comment": "Great product!",
+            "createdAt": "2021-01-01T12:00:00Z"
+        },
+        {
+            "id": 2,
+            "productId": 1,
+            "rating": 4,
+            "comment": "Good product!",
+            "createdAt": "2021-01-02T12:00:00Z"
+        },
+        {
+            "id": 3,
+            "productId": 2,
+            "rating": 3,
+            "comment": "Ok product!",
+            "createdAt": "2021-01-03T12:00:00Z"
+        }
+    ]
+}

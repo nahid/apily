@@ -3,5 +3,9 @@
   "http": {
     "method": "GET",
     "path": "/reviews"
+  },
+  "mock": {
+    "type": "dynamic",
+    "file": "all-response.mock.php"
   }
 }

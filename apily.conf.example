@@ -1,6 +1,6 @@
 {
     "baseUrl": "https://fakestoreapi.com",
-    "apiEnv": "local",
+    "environment": "local",
     "environments": {
         "local": {
             "baseUrl": "https://fakestoreapi.com",

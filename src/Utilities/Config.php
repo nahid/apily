@@ -42,18 +42,12 @@ class Config
 
     public static function baseUrl(): string
     {
-        $url = self::get('baseUrl', 'http://localhost');
-
-        if ($envBaseUrl = self::getFromEnv('baseUrl')) {
-            $url = $envBaseUrl;
-        }
-
-        return $url;
+        return self::get('baseUrl', 'http://localhost');
     }
 
     private static function processEnv(): void
     {
-        $appEnv = self::get('apiEnv', 'local');
+        $appEnv = self::get('environment', 'local');
         if (isset(self::$config['environments'][$appEnv])) {
             self::$config['env'] = self::$config['environments'][$appEnv];
         }
@@ -74,13 +68,10 @@ class Config
 
     private static function processDefaults(): void
     {
-        $defaultValue = self::get('defaults', []);
-
-
-        $json = json_encode($defaultValue, JSON_THROW_ON_ERROR);
+        $json = json_encode(self::$config, JSON_THROW_ON_ERROR);
         $json = Helper::replacePlaceholders($json, self::makeEnvVariables([]));
 
-        self::$config['defaults'] = json_decode($json, true, 512, JSON_THROW_ON_ERROR);
+        self::$config = json_decode($json, true, 512, JSON_THROW_ON_ERROR);
     }
 
     public static function getDefaults(): array

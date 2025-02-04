@@ -4,12 +4,16 @@ namespace Nahid\Apily;
 
 use GuzzleHttp\Psr7\MultipartStream;
 use GuzzleHttp\Psr7\Request;
+use GuzzleHttp\Psr7\Response;
 use GuzzleHttp\Psr7\Uri;
 use Nahid\Apily\Utilities\Config;
 use Nahid\Apily\Utilities\Helper;
+use Psr\Http\Message\ResponseInterface;
 
 class Api
 {
+    private static string $apiFilePath = '';
+    private static string $apiBaseDir = '';
     protected array $config;
 
     public function __construct(array $config)
@@ -19,19 +23,50 @@ class Api
 
     public static function from(string $path, array $vars = []): static
     {
-        $path = str_replace('.', '/', $path);
-        $filePath = getcwd().'/.apily/'.$path.'.api';
+        $apiPath = self::getFilePath($path);
 
-
-        if (!file_exists($filePath)) {
-            throw new \Exception("File not found: $filePath");
+        if (!file_exists($apiPath)) {
+            throw new \Exception("File not found: " . $apiPath);
         }
 
-        $json = file_get_contents($filePath);
+        $json = file_get_contents($apiPath);
         $json = Helper::replacePlaceholders($json, $vars);
         $config = json_decode($json, true);
 
         return new static($config);
+    }
+
+    public static function getFileDir(?string $path = null): string
+    {
+        if (self::$apiBaseDir !== '') {
+            return self::$apiBaseDir;
+        }
+
+        if (is_null($path)) {
+            throw new \Exception('Path is required');
+        }
+
+        $path = str_replace('.', '/', $path);
+        $fileName = strrchr($path, '/');
+        $baseDir = str_replace($fileName, '', $path);
+
+        return self::$apiBaseDir = getcwd().'/.apily/' . $baseDir;
+    }
+
+    public static function getFilePath(?string $path = null): string
+    {
+        if (self::$apiFilePath !== '') {
+            return self::$apiFilePath;
+        }
+
+        if (is_null($path)) {
+            throw new \Exception('Path is required');
+        }
+
+        $baseDir = self::getFileDir($path);
+        $fileBaseName = str_replace('.', '', strrchr($path, '.')) . '.api';
+
+        return self::$apiFilePath = $baseDir . '/' . $fileBaseName;
     }
 
     public function request(): Request
@@ -160,6 +195,82 @@ class Api
     {
         return $this->get('http.body.data');
     }
+
+    public function getMockType(): ?string
+    {
+        return $this->get('mock.type');
+    }
+
+    public function getMockFilePath(): string
+    {
+        $type = $this->getMockType();
+        if (!$type) {
+            return '';
+        }
+
+        if ($type === 'static') {
+            $mockFileName = str_replace('.api', '.mock.json', basename(self::getFilePath()));
+
+            $defaultPath = self::getFileDir() . '/' . $mockFileName;
+
+            if (file_exists($defaultPath)) {
+                return $defaultPath;
+            }
+
+            return self::getFileDir() . '/' . ltrim($this->get('mock.file', ''), '/');
+        }
+
+        if ($type == 'dynamic') {
+            $mockFileName = str_replace('.api', '.mock.php', basename(self::getFilePath()));
+
+            $defaultPath = self::getFileDir() . '/' . $mockFileName;
+
+            if (file_exists($defaultPath)) {
+                return $defaultPath;
+            }
+
+            return self::getFileDir() . '/' . ltrim($this->get('mock.file', ''), '/');
+        }
+
+        return '';
+    }
+
+    public function getMockResponse(): ?ResponseInterface
+    {
+
+        if ($this->getMockType() == 'static') {
+            $mockFilePath = $this->getMockFilePath();
+
+            if (file_exists($mockFilePath)) {
+                $data = json_decode(file_get_contents($mockFilePath), true);
+                $body = $data['body'];
+
+                if (is_array($body)) {
+                    $body = json_encode($body, JSON_PRETTY_PRINT);
+                }
+
+                return new Response(
+                    $data['status'] ?? 200,
+                        $data['headers'] ?? [],
+                    $body
+                );
+
+            }
+        }
+
+        $mockFilePath = $this->getMockFilePath();
+
+        $mockFn = require $mockFilePath;
+        $mockClass = $mockFn($this->request());
+
+        if (!$mockClass instanceof Contracts\AbstractMockResponse) {
+
+            throw new \Exception('Invalid mock response class');
+        }
+
+        return $mockClass->make($this->request());
+    }
+
 
     public function setContentType(string $type): void
     {

@@ -2,11 +2,13 @@
 
 namespace Nahid\Apily\Commands;
 
+use GuzzleHttp\Psr7\Response;
 use Nahid\Apily\Api;
 use Nahid\Apily\Assertions\TestRunner;
 use Nahid\Apily\Client;
 use Nahid\Apily\Utilities\Config;
 use Nahid\Apily\Utilities\Json;
+use Psr\Http\Message\ResponseInterface;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Helper\ProgressBar;
 use Symfony\Component\Console\Helper\ProgressIndicator;
@@ -48,40 +50,66 @@ class CallCommand extends BaseCommand
 
         $api = Api::from($apiName, $replacements);
 
-        $httpClient = new Client();
         $metaInfo = [
             'URL' => $api->getFullUrl(),
             'Method' => $api->getMethod(),
         ];
 
+        $httpClient = new Client();
         $progressIndicator->start('Sending request...');
-        $step = 1;
-        $response = $httpClient->httpClient()->send($api->request(), [
-            'http_errors' => false,
-            'on_stats' => function ($stats) use (&$metaInfo) {
-                $metaInfo['Duration'] = round(1000 * $stats->getTransferTime(), 2) . 'ms';
-                $metaInfo['Connect Time'] = round(1000 * $stats->getHandlerStat('connect_time'), 2) . 'ms';
-            },
-            'progress' => function ($total, $received) use ($progressIndicator, &$step) {
-                $step++;
-                if ($step > 10) {
-                    $progressIndicator->setMessage('Receiving...');
+        $totalReceivedBytes = 0;
+        $response = null;
+
+        if (Config::get('mock_enabled', false)) {
+            $progressIndicator->advance();
+            $progressIndicator->setMessage('Receiving...');
+
+            $response = $api->getMockResponse();
+            $metaInfo['Status'] = $response->getStatusCode() . ' ' . $httpClient->getHttpStatus($response->getStatusCode());
+            $metaInfo['Size'] = round(strlen($response->getBody())/1000, 2) . ' KB';
+            $metaInfo['Duration'] = rand(20, 1000 ) . 'ms';
+            $metaInfo['Connect Time'] = rand(20, 1000 ) . 'ms';
+
+            $progressIndicator->advance();
+
+            $totalReceivedBytes = strlen($response->getBody());
+
+        }
+
+        if (!Config::get('mock_enabled', false)) {
+            $step = 1;
+            $response = $httpClient->httpClient()->send($api->request(), [
+                'http_errors' => false,
+                'on_stats' => function ($stats) use (&$metaInfo) {
+                    $metaInfo['Duration'] = round(1000 * $stats->getTransferTime(), 2) . 'ms';
+                    $metaInfo['Connect Time'] = round(1000 * $stats->getHandlerStat('connect_time'), 2) . 'ms';
+                },
+                'progress' => function ($total, $received) use ($progressIndicator, &$step) {
+                    $step++;
+                    if ($step > 10) {
+                        $progressIndicator->setMessage('Receiving...');
+                    }
+                    $progressIndicator->advance();
                 }
-                $progressIndicator->advance();
-            }
-        ]);
+            ]);
 
-        $totalReceivedBytes = $response->getBody()->getSize();
-        $metaInfo['Size'] = round($totalReceivedBytes/1000, 2) . ' KB';
+            $totalReceivedBytes = $response->getBody()->getSize();
+            $metaInfo['Size'] = round($totalReceivedBytes/1000, 2) . ' KB';
+            $metaInfo['Status'] = $response->getStatusCode() . ' ' . $httpClient->getHttpStatus($response->getStatusCode());
+        }
 
-        $progressIndicator->finish('Received (' . $totalReceivedBytes . ' bytes)');
+
 
         if ($input->getOption('test')) {
+            $progressIndicator->advance();
+            $progressIndicator->setMessage('Running assertions...');
+
             $assertionSection = $output->section();
             $io->title('Assertions');
             $testPath = str_replace('.', '/', $apiName);
             $testFilePath = getcwd().'/.apily/'.$testPath.'.test.php';
 
+            $progressIndicator->advance();
 
             if (!file_exists($testFilePath)) {
                 throw new \Exception("File not found: $testFilePath");
@@ -92,6 +120,7 @@ class CallCommand extends BaseCommand
 
             $testRunner = new TestRunner($testInstance);
             $testRunner->run();
+            $progressIndicator->advance();
             $assertions = $testRunner->getAssertions();
 
             $output->writeln($this->formatAssertions($assertions));
@@ -99,11 +128,9 @@ class CallCommand extends BaseCommand
             return Command::SUCCESS;
         }
 
-
+        $progressIndicator->finish('Received (' . $totalReceivedBytes . ' bytes)');
 
         $output->writeln("↓");
-
-        $metaInfo['Status'] = $response->getStatusCode() . ' ' . $httpClient->getHttpStatus($response->getStatusCode());
 
         if ($input->getOption('info')) {
             $requestSection = $output->section();
@@ -160,6 +187,25 @@ class CallCommand extends BaseCommand
         }
 
         return $formatted;
+    }
+
+    private function makeMockResponse(Api $api): ResponseInterface
+    {
+        $mockData = $api->getMockResponse();
+        $data = $mockData['body'] ?? [];
+        $body = '';
+
+        if (is_array($data)) {
+            $body = json_encode($data, JSON_PRETTY_PRINT);
+        } else {
+            $body = $data;
+        }
+
+        return new Response(
+            $mockData['status'] ?? 200,
+            $mockData['headers'] ?? [],
+            $body
+        );
     }
 
 }
