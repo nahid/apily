@@ -1,0 +1,10 @@
+{
+  "description": "Get all products",
+  "http": {
+    "method": "GET",
+    "path": "/products",
+    "headers": {
+
+    }
+  }
+}

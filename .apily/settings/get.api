@@ -1,0 +1,10 @@
+{
+  "description": "Get creator settings",
+  "http": {
+    "method": "GET",
+    "path": "/settings",
+    "headers": {
+
+    }
+  }
+}

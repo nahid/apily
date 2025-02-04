@@ -1,0 +1,23 @@
+{
+  "description": "Create a product",
+    "http": {
+        "method": "POST",
+        "path": "/upload",
+        "type": "multipart",
+        "headers": {
+          "Content-Type": "multipart/form-data"
+        },
+        "body": [
+          {
+            "name": "title",
+            "type": "text",
+            "value": "Apify Product"
+          },
+          {
+            "name": "file",
+            "type": "file",
+            "value": "https://apify.com/img/apify-logo-200px.png"
+          }
+        ]
+    }
+}

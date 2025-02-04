@@ -1,6 +1,4 @@
-.apily.bk
 composer.lock
 vendor
 .idea
-apily.conf.bk
-.apily.bk
+apily.conf

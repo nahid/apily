@@ -1,0 +1,35 @@
+{
+  "description": "Create a product",
+    "http": {
+        "method": "POST",
+        "path": "/products",
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": {
+            "type": "multipart",
+            "data": [
+              {
+                "name": "title",
+                "type": "text",
+                "value": "Apify Product"
+              },
+              {
+                "name": "price",
+                "type": "number",
+                "value": 100
+              },
+              {
+                "name": "description",
+                "type": "text",
+                "value": "This is a product created by Apify API"
+              },
+              {
+                "name": "image",
+                "type": "file",
+                "value": "https://apify.com/img/apify-logo-200px.png"
+              }
+            ]
+        }
+    }
+}

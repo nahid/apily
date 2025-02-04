@@ -1,0 +1,10 @@
+{
+  "description": "Get all users",
+    "http": {
+        "method": "GET",
+        "path": "/users/{{env.user_id}}",
+        "headers": {
+
+        }
+    }
+}

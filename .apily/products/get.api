@@ -1,0 +1,10 @@
+{
+  "description": "Get a single product",
+  "http": {
+    "method": "GET",
+    "path": "/products/{{args.id}}",
+    "headers": {
+
+    }
+  }
+}

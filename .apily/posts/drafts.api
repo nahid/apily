@@ -1,0 +1,14 @@
+{
+  "description": "Get all users",
+    "http": {
+        "method": "GET",
+        "path": "/posts-drafted",
+        "headers": {
+
+        },
+        "query": {
+          "page": 1,
+          "limit": 10
+        }
+    }
+}
