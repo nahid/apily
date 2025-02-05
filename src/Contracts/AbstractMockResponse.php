@@ -2,14 +2,15 @@
 
 namespace Nahid\Apily\Contracts;
 
-use GuzzleHttp\Psr7\Request;
 use GuzzleHttp\Psr7\Response;
+use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\StreamInterface;
 
 abstract class AbstractMockResponse
 {
-    public function __construct(protected readonly Request $request)
+    public function __construct(protected readonly RequestInterface|ServerRequestInterface $request)
     {
         //
     }

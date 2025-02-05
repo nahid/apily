@@ -8,20 +8,26 @@ use GuzzleHttp\Psr7\Response;
 use GuzzleHttp\Psr7\Uri;
 use Nahid\Apily\Utilities\Config;
 use Nahid\Apily\Utilities\Helper;
+use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestInterface;
 
 class Api
 {
     private static string $apiFilePath = '';
     private static string $apiBaseDir = '';
+    private null|ResponseInterface|ServerRequestInterface $request = null;
+
     protected array $config;
 
-    public function __construct(array $config)
+    public function __construct(array $config, null|RequestInterface|ServerRequestInterface $request = null)
     {
         $this->config = $config;
+        $this->request = $request;
     }
 
-    public static function from(string $path, array $vars = []): static
+
+    public static function from(string $path, array $vars = [], null|RequestInterface|ServerRequestInterface $request = null): static
     {
         $apiPath = self::getFilePath($path);
 
@@ -33,7 +39,7 @@ class Api
         $json = Helper::replacePlaceholders($json, $vars);
         $config = json_decode($json, true);
 
-        return new static($config);
+        return new static($config, $request);
     }
 
     public static function getFileDir(?string $path = null): string
@@ -66,7 +72,7 @@ class Api
         $baseDir = self::getFileDir($path);
         $fileBaseName = str_replace('.', '', strrchr($path, '.')) . '.api';
 
-        return self::$apiFilePath = $baseDir . '/' . $fileBaseName;
+        return self::$apiFilePath = $baseDir . '/' . ltrim($fileBaseName, '/');
     }
 
     public function request(): Request
@@ -98,6 +104,15 @@ class Api
             $body
         );
 
+    }
+
+    protected function getRequest(): RequestInterface|ServerRequestInterface
+    {
+        if ($this->request) {
+            return $this->request;
+        }
+
+        return $this->request();
     }
 
     private function handleJsonContent(): string
@@ -261,14 +276,14 @@ class Api
         $mockFilePath = $this->getMockFilePath();
 
         $mockFn = require $mockFilePath;
-        $mockClass = $mockFn($this->request());
+        $mockClass = $mockFn($this->getRequest());
 
         if (!$mockClass instanceof Contracts\AbstractMockResponse) {
 
             throw new \Exception('Invalid mock response class');
         }
 
-        return $mockClass->make($this->request());
+        return $mockClass->make();
     }
 
 

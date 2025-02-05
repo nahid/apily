@@ -1,0 +1,18 @@
+{
+    "status": 200,
+    "headers": {
+        "Content-Type": "application/json"
+    },
+    "body": [
+        {
+            "id": 1,
+            "name": "John Doe",
+            "email": "hello@email.com"
+        },
+        {
+            "id": 2,
+            "name": "Jane Doe",
+            "email": "hi@email.com"
+        }
+    ]
+}

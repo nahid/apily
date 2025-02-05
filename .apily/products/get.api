@@ -2,9 +2,12 @@
   "description": "Get a single product",
   "http": {
     "method": "GET",
-    "path": "/products/{{args.id}}",
+    "path": "/products/{{url.id}}",
     "headers": {
 
     }
+  },
+  "mock": {
+    "type": "dynamic"
   }
 }

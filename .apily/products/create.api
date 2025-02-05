@@ -31,5 +31,8 @@
               }
             ]
         }
+    },
+    "mock": {
+        "type": "dynamic"
     }
 }

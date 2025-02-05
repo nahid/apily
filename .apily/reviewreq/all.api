@@ -1,0 +1,14 @@
+{
+  "description": "API request for reviewreq all",
+  "http": {
+    "method": "GET",
+    "path": "review-request/emails",
+    "body": {},
+    "headers": {
+      "Content-Type": "application/json"
+    }
+  },
+  "mock": {
+    "type": "static"
+  }
+}
